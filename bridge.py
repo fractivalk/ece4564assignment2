@@ -16,6 +16,7 @@ server_sock=BluetoothSocket( RFCOMM )
 server_sock.bind(("",PORT_ANY))
 server_sock.listen(1)
 
+
 port = server_sock.getsockname()[1]
 
 uuid = "94f39d29-7d6d-437d-973b-fba39e49d4ee"
@@ -30,6 +31,11 @@ print("[Checkpoint 03] Created RFCOMM Bluetooth socket on port 1")
 
 client_sock, client_info = server_sock.accept()
 print("[Checkpoint 04] Accepted RFCOMM Bluetooth connection from ", client_info)
+
+""" send rmq_params info to blueterm """
+
+exchange = "Communicating on " + rmq_params[3]
+client_sock.send(exchange)
 
 try:
 	buffer = ''
