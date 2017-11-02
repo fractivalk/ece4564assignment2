@@ -40,8 +40,9 @@ client_sock.send(exchange)
 client_sock.send("Available Queues: \n")
 
 queue_set = rmq_params['queues']
-for x in range(0, len(queue_set) - 1)
-	client_sock.send(queue_set[x] + "\n")
+for x in range(0, len(queue_set) - 1):
+	temp = str(queue_set[x] + "\n")
+	client_sock.send(temp)
 
 try:
 	buffer = ''
