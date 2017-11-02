@@ -6,6 +6,8 @@
 #
 # $Id: rfcomm-server.py 518 2007-08-10 07:20:07Z albert $
 
+import pymongo
+from rmq_params import *
 from bluetooth import *
 import sys
 import os
