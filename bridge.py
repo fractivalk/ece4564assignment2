@@ -33,7 +33,7 @@ client_sock, client_info = server_sock.accept()
 print("[Checkpoint 04] Accepted RFCOMM Bluetooth connection from ", client_info)
 
 """ send rmq_params info to blueterm """
-
+print("[Checkpoint 05] Sending Exchange and Queue names")
 exchange = "Communicating on Exchange: " + rmq_params['exchange'] + '\r\n'
 client_sock.send(exchange)
 
@@ -49,13 +49,15 @@ try:
 	while True:
 		
 		buffer += str(client_sock.recv(1024).decode("utf-8"))
-		if '\r\n' in buffer: break #when the command has been entered fully, process
+		if '\r\n' in buffer: 
+			buffer = buffer.replace(' ', '')[:-2]
+			print("[Checkpoint 06] Received RFCOMM Bluetooth data: " + str(buffer))
+			buffer = '' #when the command has been entered fully, process
 		
 		"""
 		data = str(input()) + '\r\n'
 		client_sock.send(data)
 		"""
-	print("[Checkpoint 06] Received RFCOMM Bluetooth data: " + str(buffer))
 		
 except IOError:
 	pass
