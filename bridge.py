@@ -12,6 +12,20 @@ from rmq_params import *
 from bluetooth import *
 import sys
 import os
+import pika
+
+if len(sys.argv) != 3 or sys.argv[1] != '-s':
+    print('Invalid arguments')
+    sys.exit(0)
+    
+print("[Checkpoint 01] Connected to database {} on MongoDB server at 'localhost'".format(rmq_params['exchange']))
+
+credentials = pika.PlainCredentials(rmq_params['username'], rmq_params['password'])
+parameters = pika.ConnectionParameters(sys.argv[2], virtual_host=rmq_params['vhost'], credentials=credentials)
+connection = pika.BlockingConnection(parameters)
+channel = connection.channel()
+print("[Checkpoint 02] Connected to vhost '{}' on RMQ server at '{}' as user '{}'".format(rmq_params['vhost'], sys.argv[2], rmq_params['username']))
+
 
 server_sock=BluetoothSocket( RFCOMM )
 server_sock.bind(("",PORT_ANY))
