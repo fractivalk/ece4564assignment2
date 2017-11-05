@@ -34,14 +34,14 @@ print("[Checkpoint 04] Accepted RFCOMM Bluetooth connection from ", client_info)
 
 """ send rmq_params info to blueterm """
 
-exchange = "Communicating on Exchange" + rmq_params['exchange'] + "\n"
+exchange = "Communicating on Exchange: " + rmq_params['exchange'] + '\r\n'
 client_sock.send(exchange)
 
-client_sock.send("Available Queues: \n")
+client_sock.send("Available Queues: \r\n")
 
 queue_set = rmq_params['queues']
-for x in range(0, len(queue_set) - 1):
-	temp = str(queue_set[x] + "\n")
+for i in queue_set:
+	temp = str(i + "\r\n")
 	client_sock.send(temp)
 
 try:
