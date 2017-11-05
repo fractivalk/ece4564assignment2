@@ -13,6 +13,7 @@ from bluetooth import *
 import sys
 import os
 import pika
+from bson.objectid import ObjectId
 
 def callback(ch, method, properties, body):
 	print("%r:%r" % (method.routing_key, body))
@@ -21,6 +22,8 @@ if len(sys.argv) != 3 or sys.argv[1] != '-s':
     print('Invalid arguments')
     sys.exit(0)
     
+db = pymongo.MongoClient().rmq_params['exchange']
+
 print("[Checkpoint 01] Connected to database {} on MongoDB server at 'localhost'".format(rmq_params['exchange']))
 
 credentials = pika.PlainCredentials(rmq_params['username'], rmq_params['password'])
@@ -88,6 +91,9 @@ try:
 				continue
 			channel.basic_publish(exchange=rmq_params['exchange'], routing_key = prodMatch.group(1), body = prodMatch.group(2))
 			btCommand = ''
+            db[prodMatch.group(1)].insert({"Subject": prodMatch.group(1), "Action": "p", "MsgID": \
+                "team_10$" + time.time(), "Place": rmq_params['exchange'], "Message": prodMatch.group(2)})
+
 		elif btCommand[:1] == 'c':
 			conMatch = re.match('c:(\w+)', btCommand)
 			if not conMatch:
@@ -99,7 +105,12 @@ try:
 			print("[Checkpoint c-03] Sending to RFCOMM Bluetooth client")
 			btCommand = ''
 		elif btCommand[:1] == 'h':
-			print("placeholder")
+			conMatch = re.match('c:(\w+)', btCommand)
+			if not conMatch:
+				print("invalid input")
+				continue
+            for item in db[conMatch.group(1)].find():
+                pprint.pprint(item)
 
 
 
