@@ -94,8 +94,9 @@ try:
 				print("invalid input")
 				continue
 			(method, properties, body) = channel.basic_get(queue=conMatch.group(1), no_ack=True)
-			print(method.routing_key)
-			print(body)
+			print("[Checkpoint c-01] Consumed a message published with routing_key:" + method.routing_key)
+			print("[Checkpoint c-02] Message: " + body)
+			print("[Checkpoint c-03] Sending to RFCOMM Bluetooth client")
 			btCommand = ''
 		elif btCommand[:1] == 'h':
 			print("placeholder")
