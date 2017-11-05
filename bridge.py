@@ -14,6 +14,9 @@ import sys
 import os
 import pika
 
+def callback(ch, method, properties, body):
+	print("%r:%r" % (method.routing_key, body))
+
 if len(sys.argv) != 3 or sys.argv[1] != '-s':
     print('Invalid arguments')
     sys.exit(0)
@@ -26,6 +29,7 @@ connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
 print("[Checkpoint 02] Connected to vhost '{}' on RMQ server at '{}' as user '{}'".format(rmq_params['vhost'], sys.argv[2], rmq_params['username']))
 
+channel.exchange_declare(exchange=rmq_params['exchange'], exchange_type='direct')
 
 server_sock=BluetoothSocket( RFCOMM )
 server_sock.bind(("",PORT_ANY))
@@ -78,17 +82,24 @@ try:
 			buffer = '' #when the command has been entered fully, process
 		
 		if btCommand[:1] == 'p':
-			print(repr(btCommand))
-			print("the first letter is p")
 			prodMatch = re.match('p:(\w+) "([\w+\s+]+)"', btCommand)
-			print(prodMatch.group(1))
-			print(prodMatch.group(2))
+			if not prodMatch:
+				print("invalid input")
+				continue
+			channel.basic_publish(exchange=rmq_params['exchange'], routing_key = prodMatch.group(1), body = prodMatch.group(2))
+			btCommand = ''
 		elif btCommand[:1] == 'c':
-			print("the first letter is c")
+			conMatch = re.match('c:(\w+)', btCommand)
+			if not conMatch:
+				print("invalid input")
+				continue
+			(method, properties, body) = channel.basic_get(queue=conMatch.group(1), no_ack=True)
+			print(method.routing_key)
+			print(body)
+			btCommand = ''
 		elif btCommand[:1] == 'h':
-			print ("the first letter is h")
-		else:
-			print("invalid command")
+			print("placeholder")
+
 
 
 		"""
