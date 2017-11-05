@@ -35,5 +35,7 @@ def status_callback(ch, method, properties, body):
 channel.basic_consume(master_callback, queue=rmq_params['master_queue'], no_ack=True)
 channel.basic_consume(status_callback, queue=rmq_params['status_queue'], no_ack=True)
 
+print("[Checkpoint 02]: Consuming messages from '{}' queue".format(rmq_params['master_queue'])
+
 channel.start_consuming()
 
