@@ -7,6 +7,7 @@
 # $Id: rfcomm-server.py 518 2007-08-10 07:20:07Z albert $
 
 import pymongo
+import re
 from rmq_params import *
 from bluetooth import *
 import sys
@@ -32,6 +33,13 @@ print("[Checkpoint 03] Created RFCOMM Bluetooth socket on port 1")
 client_sock, client_info = server_sock.accept()
 print("[Checkpoint 04] Accepted RFCOMM Bluetooth connection from ", client_info)
 
+print("[Checkpoint p-01] Published message with routing_key: 'ex_status'")
+""" TO DO """
+
+print ("[Checkpoint p-02] Message: green")
+""" TO DO """
+
+
 """ send rmq_params info to blueterm """
 print("[Checkpoint 05] Sending Exchange and Queue names")
 exchange = "Communicating on Exchange: " + rmq_params['exchange'] + '\r\n'
@@ -46,14 +54,29 @@ for i in queue_set:
 
 try:
 	buffer = ''
+	btCommand = ''
 	while True:
-		
 		buffer += str(client_sock.recv(1024).decode("utf-8"))
 		if '\r\n' in buffer: 
-			buffer = buffer.replace(' ', '')[:-2]
+			buffer = buffer[:-2]
 			print("[Checkpoint 06] Received RFCOMM Bluetooth data: " + str(buffer))
+			btCommand = str(buffer)
 			buffer = '' #when the command has been entered fully, process
 		
+		if btCommand[:1] == 'p':
+			print(repr(btCommand))
+			print("the first letter is p")
+			prodMatch = re.match('p:(\w+) "([\w+\s+]+)"', btCommand)
+			print(prodMatch.group(1))
+			print(prodMatch.group(2))
+		elif btCommand[:1] == 'c':
+			print("the first letter is c")
+		elif btCommand[:1] == 'h':
+			print ("the first letter is h")
+		else:
+			print("invalid command")
+
+
 		"""
 		data = str(input()) + '\r\n'
 		client_sock.send(data)
