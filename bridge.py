@@ -87,6 +87,10 @@ while True:
 			
 			if btCommand[:1] == 'p':
 				prodMatch = re.match('p:(\w+) "([\w+\s+]+)"', btCommand)
+				if prodMatch.group(1) not in list(rmq_params['queues']):
+					print("invalid input")
+					client_sock.send("invalid input")
+					continue
 				if not prodMatch:
 					print("invalid input")
 					continue
@@ -101,36 +105,54 @@ while True:
 				db[prodMatch.group(1)].insert_one(doc)
 				print("[Checkpoint m-01] Stored document in collection '{}' in MongoDB database '{}'".format(prodMatch.group(1), rmq_params['exchange']))
 				print("[Checkpoint m-02] Document: " + str(doc))
+
 			elif btCommand[:1] == 'c':
 				conMatch = re.match('c:(\w+)', btCommand)
+				if conMatch.group(1) not in list(rmq_params['queues']):
+					print("invalid input")
+					client_sock.send("invalid input")
+					continue
 				if not conMatch:
 					print("invalid input")
 					continue
+				print("[Checkpoint p-01] Published message with routing_key: " + rmq_params['status_queue'])
+				print("[Checkpoint p-02] Message: yellow")
 				channel.basic_publish(exchange=rmq_params['exchange'], routing_key = rmq_params['status_queue'], body = 'yellow')
 				(method, properties, body) = channel.basic_get(queue=conMatch.group(1), no_ack=True)
 				print("[Checkpoint c-01] Consumed a message published with routing_key:" + method.routing_key)
-				print("[Checkpoint c-02] Message: " + body)
+				print("[Checkpoint c-02] Message: " + str(body))
 				print("[Checkpoint c-03] Sending to RFCOMM Bluetooth client")
-				doc = {"Subject": prodMatch.group(1), "Action": "c", "MsgID": "team_10$" + str(time.time()), "Place": rmq_params['exchange'], "Message": ""}
-				db[prodMatch.group(1)].insert_one(doc)
-				print("[Checkpoint m-01] Stored document in collection '{}' in MongoDB database '{}'".format(prodMatch.group(1), rmq_params['exchange']))
-				print("[Checkpoint m-02] Document: " + str(doc))
+				client_sock.send(str(body) + '\r\n')
+				doc2 = {"Subject": conMatch.group(1), "Action": "c", "MsgID": "team_10$" + str(time.time()), "Place": rmq_params['exchange'], "Message": ""}
+				db[conMatch.group(1)].insert_one(doc2)
+				print("[Checkpoint m-01] Stored document in collection '{}' in MongoDB database '{}'".format(conMatch.group(1), rmq_params['exchange']))
+				print("[Checkpoint m-02] Document: " + str(doc2))
 				btCommand = ''
+
 			elif btCommand[:1] == 'h':
 				conMatch = re.match('h:(\w+)', btCommand)
+				if conMatch.group(1) not in list(rmq_params['queues']):
+					print("invalid input")
+					client_sock.send("invalid input")
+					continue
 				if not conMatch:
 					print("invalid input")
 					continue
+				print("[Checkpoint p-01] Published message with routing_key: " + rmq_params['status_queue'])
+				print("[Checkpoint p-02] Message: blue")
 				channel.basic_publish(exchange=rmq_params['exchange'], routing_key = rmq_params['status_queue'], body = 'blue')
+				print("[Checkpoint h-01] Printing history of Collection '" + conMatch.group(1) + "' in MongoDB database " + rmq_params['exchange'])
+				print("[Checkpoint h-02] Collection: " + conMatch.group(1))
 				counter = 0;
 				for item in db[conMatch.group(1)].find():
-					print("Document {}:".format(counter))
+					print("Document {}: {}".format(counter, str(item)))
 					counter += 1
-					pprint.pprint(item)
+				btCommand = ''
 
 			
 	except IOError:
 		channel.basic_publish(exchange=rmq_params['exchange'], routing_key = rmq_params['status_queue'], body = 'red')
+		print("[Checkpoint 07] RFCOMM Bluetooth client disconnected")
 		print("[Checkpoint p-01] Published message with routing_key: " + rmq_params['status_queue'])
 		print("[Checkpoint p-02] Message: red")
 		pass
