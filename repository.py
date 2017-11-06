@@ -14,6 +14,9 @@ channel.queue_declare(queue=rmq_params['master_queue'])
 channel.queue_declare(queue=rmq_params['status_queue'])
 channel.queue_purge(queue=rmq_params['master_queue'])
 channel.queue_purge(queue=rmq_params['status_queue'])
+channel.queue_unbind(exchange=rmq_params['exchange'], 
+                    queue=rmq_params['status_queue'], 
+                    routing_key=rmq_params['status_queue'])
 channel.queue_bind(exchange=rmq_params['exchange'], 
                     queue=rmq_params['status_queue'], 
                     routing_key=rmq_params['status_queue'])
@@ -22,7 +25,9 @@ channel.queue_bind(exchange=rmq_params['exchange'],
 for item in list(rmq_params['queues']):
     channel.queue_declare(queue=item)
     channel.queue_purge(queue=item)
+    channel.queue_unbind(exchange=rmq_params['exchange'], queue=item, routing_key=item)
     channel.queue_bind(exchange=rmq_params['exchange'], queue=item, routing_key=item)
+    channel.queue_unbind(exchange=rmq_params['exchange'], queue=rmq_params['master_queue'], routing_key=item)
     channel.queue_bind(exchange=rmq_params['exchange'], queue=rmq_params['master_queue'], routing_key=item)
 
 def master_callback(ch, method, properties, body):
@@ -35,7 +40,7 @@ def status_callback(ch, method, properties, body):
 channel.basic_consume(master_callback, queue=rmq_params['master_queue'], no_ack=True)
 channel.basic_consume(status_callback, queue=rmq_params['status_queue'], no_ack=True)
 
-print("[Checkpoint 02]: Consuming messages from '{}' queue".format(rmq_params['master_queue'])
+print("[Checkpoint 02]: Consuming messages from '{}' queue".format(rmq_params['master_queue']))
 
 channel.start_consuming()
 
